@@ -1,0 +1,18 @@
+# Virtual environment
+venv/
+
+# Databases
+*.db
+
+# Logs
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Streamlit
+.streamlit/
+
+# OS
+.DS_Store
