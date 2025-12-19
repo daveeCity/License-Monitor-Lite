@@ -1,12 +1,12 @@
-# DSLS License Monitor
+# DSLS License Monitor Lite
 
-A lightweight, real-time dashboard for monitoring **Dassault Systèmes License Server (DSLS)** usage.
+A lightweight, realtime dashboard for monitoring **Dassault Systèmes License Server (DSLS)** usage.
 
 ---
 
 ## Features
 
-- Real-time parsing of DSLS license server logs
+- Realtime parsing of DSLS license server logs
 - Tracking of active license sessions
 - Persistent historical archive (append-only)
 - Web-based dashboard built with Streamlit
