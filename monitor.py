@@ -10,7 +10,7 @@ from pathlib import Path
 
 LOG_DIRECTORY = "/path/to/dsls/logs"  # <-- customize locally
 LOG_PATTERN_FILE = "LicenseServer*.log"
-POLL_INTERVAL = 1.0  # seconds
+POLL_INTERVAL = 1.0 
 
 LIVE_DB = "license_manager.db"
 HISTORY_DB = "history.db"
@@ -136,5 +136,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
