@@ -3,60 +3,52 @@ import re
 import time
 import sqlite3
 from pathlib import Path
+from dotenv import load_dotenv
 
-# -----------------------------
-# CONFIGURATION (EDIT LOCALLY!!)
-# -----------------------------
+# CONFIGURATION (.env)
 
-LOG_DIRECTORY = "/path/to/dsls/logs"  # <-- customize locally
-LOG_PATTERN_FILE = "LicenseServer*.log"
-POLL_INTERVAL = 1.0 
+load_dotenv()
 
-LIVE_DB = "license_manager.db"
-HISTORY_DB = "history.db"
+LOG_DIRECTORY = os.getenv("LOG_DIRECTORY", "/path/to/dsls/logs")
+LOG_PATTERN_FILE = os.getenv("LOG_PATTERN_FILE", "LicenseServer*.log")
+POLL_INTERVAL = float(os.getenv("POLL_INTERVAL", "1.0"))
+
+LIVE_DB = os.getenv("LIVE_DB", "license_manager.db")
+HISTORY_DB = os.getenv("HISTORY_DB", "history.db")
 
 # DATABASE SETUP
 
 def init_live_db():
-    conn = sqlite3.connect(LIVE_DB)
-    cur = conn.cursor()
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS active_sessions (
-            user TEXT,
-            feature TEXT,
-            host TEXT,
-            start_time TEXT
-        )
-        """
-    )
-    conn.commit()
-    conn.close()
-
+    with sqlite3.connect(LIVE_DB) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS active_sessions (
+                user TEXT,
+                feature TEXT,
+                host TEXT,
+                start_time TEXT
+            )
+        """)
 
 def init_history_db():
-    conn = sqlite3.connect(HISTORY_DB)
-    cur = conn.cursor()
-    cur.execute(
-        """
-        CREATE TABLE IF NOT EXISTS history (
-            timestamp TEXT,
-            action TEXT,
-            user TEXT,
-            feature TEXT,
-            host TEXT
-        )
-        """
-    )
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(HISTORY_DB) as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS history (
+                timestamp TEXT,
+                action TEXT,
+                user TEXT,
+                feature TEXT,
+                host TEXT
+            )
+        """)
 
 # LOG PARSING
 
-# Example patterns
-GRANT_PATTERN = re.compile(r"GRANT (?P<feature>\S+) (?P<user>\S+)@(?P<host>\S+)")
-TIMEOUT_PATTERN = re.compile(r"TIMEOUT (?P<feature>\S+) (?P<user>\S+)@(?P<host>\S+)")
-
+GRANT_PATTERN = re.compile(
+    r"GRANT\s+(?P<feature>\S+)\s+(?P<user>\S+)@(?P<host>\S+)"
+)
+TIMEOUT_PATTERN = re.compile(
+    r"TIMEOUT\s+(?P<feature>\S+)\s+(?P<user>\S+)@(?P<host>\S+)"
+)
 
 def process_line(line: str):
     if match := GRANT_PATTERN.search(line):
@@ -69,43 +61,30 @@ def process_line(line: str):
         remove_session(data)
         add_history("TIMEOUT", data)
 
-
 # DATABASE OPERATIONS
 
 def add_session(data):
-    conn = sqlite3.connect(LIVE_DB)
-    cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO active_sessions VALUES (?, ?, ?, datetime('now'))",
-        (data["user"], data["feature"], data["host"]),
-    )
-    conn.commit()
-    conn.close()
-
+    with sqlite3.connect(LIVE_DB) as conn:
+        conn.execute(
+            "INSERT INTO active_sessions VALUES (?, ?, ?, datetime('now'))",
+            (data["user"], data["feature"], data["host"])
+        )
 
 def remove_session(data):
-    conn = sqlite3.connect(LIVE_DB)
-    cur = conn.cursor()
-    cur.execute(
-        "DELETE FROM active_sessions WHERE user=? AND feature=? AND host=?",
-        (data["user"], data["feature"], data["host"]),
-    )
-    conn.commit()
-    conn.close()
-
+    with sqlite3.connect(LIVE_DB) as conn:
+        conn.execute(
+            "DELETE FROM active_sessions WHERE user=? AND feature=? AND host=?",
+            (data["user"], data["feature"], data["host"])
+        )
 
 def add_history(action, data):
-    conn = sqlite3.connect(HISTORY_DB)
-    cur = conn.cursor()
-    cur.execute(
-        "INSERT INTO history VALUES (datetime('now'), ?, ?, ?, ?)",
-        (action, data["user"], data["feature"], data["host"]),
-    )
-    conn.commit()
-    conn.close()
+    with sqlite3.connect(HISTORY_DB) as conn:
+        conn.execute(
+            "INSERT INTO history VALUES (datetime('now'), ?, ?, ?, ?)",
+            (action, data["user"], data["feature"], data["host"])
+        )
 
-
-# MAIN LOOP
+# FILE FOLLOWER
 
 def follow(file):
     file.seek(0, os.SEEK_END)
@@ -116,6 +95,7 @@ def follow(file):
             continue
         yield line
 
+# MAIN
 
 def main():
     init_live_db()
@@ -129,13 +109,9 @@ def main():
 
     current_log = log_files[-1]
 
-    with open(current_log, "r") as f:
+    with open(current_log, "r", encoding="utf-8", errors="ignore") as f:
         for line in follow(f):
             process_line(line)
 
-
 if __name__ == "__main__":
     main()
-
-
-
