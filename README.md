@@ -29,6 +29,13 @@ A lightweight, realtime dashboard for monitoring **License Server** usage.
 * Displays active license sessions
 * Provides historical usage views
 
+### Batch Import — `import_history.py`
+
+- One-time or manual execution
+- Scans all existing DSLS log files
+- Backfills the historical database
+- Safe to run before enabling real-time monitoring
+
 ### Databases
 
 * **`license_manager.db`**
