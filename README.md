@@ -140,10 +140,8 @@ nohup ./venv/bin/streamlit run dashboard.py --server.port 8501 > dashboard.log 2
 ## Repository Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/license-monitor.git
+git clone https://github.com/DaveeCity/License-Monitor-Lite.git
 cd license-monitor
 ```
 
 ---
-
-DSLS and Dassault Systèmes are trademarks of their respective owners.
